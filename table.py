@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
-import sys
+import io
 import csv
 import tarfile
 import gzip
+import urllib.parse
 
 t1 = tarfile.open('access01.log.gz.tar')
 t2 = tarfile.open('access02.log.gz.tar')
@@ -21,7 +22,7 @@ names = [
 ]
 
 w = csv.DictWriter(
-    sys.stdout,
+    io.TextIOWrapper(gzip.GzipFile('logs.csv.gz', 'w'), encoding="utf-8"),
     fieldnames=['ogpweb#', 'date', 'request', 'code', 'bytes', 'referrer', 'useragent', 'source', 'rt', 'urt'],
 )
 w.writeheader()
@@ -35,7 +36,7 @@ for ogpweb, t in enumerate((t1, t2, t3, t4), 1):
             request, rest = rest.split('" ', 1)
             code, rest = rest.split(' ', 1)
             bts, rest = rest.split(' "', 1)
-            dash, rest = rest.split('" "', 1)
+            referrer, rest = rest.split('" "', 1)
             useragent, rest = rest.split('" "', 1)
             source, rest = rest.split('" rt=', 1)
             rt, rest = rest.split(' urt="', 1)
@@ -44,10 +45,10 @@ for ogpweb, t in enumerate((t1, t2, t3, t4), 1):
             w.writerow({
                 'ogpweb#': ogpweb,
                 'date': dt,
-                'request': request,
+                'request': urllib.parse.unquote(request),
                 'code': code,
                 'bytes': bts,
-                'dash': dash,
+                'referrer': referrer,
                 'useragent': useragent,
                 'source': source,
                 'rt': rt,
