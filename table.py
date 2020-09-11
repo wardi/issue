@@ -5,6 +5,7 @@ import csv
 import tarfile
 import gzip
 import urllib.parse
+from datetime import datetime
 
 t1 = tarfile.open('access01.log.gz.tar')
 t2 = tarfile.open('access02.log.gz.tar')
@@ -32,7 +33,7 @@ for ogpweb, t in enumerate((t1, t2, t3, t4), 1):
         g = gzip.GzipFile(fileobj=t.extractfile(fn))
         for row in g:
             _, rest = row.decode('utf-8').split('[', 1)
-            dt, rest = rest.split('] "', 1)
+            dt, rest = rest.split(' +0000] "', 1)
             request, rest = rest.split('" ', 1)
             code, rest = rest.split(' ', 1)
             bts, rest = rest.split(' "', 1)
@@ -44,7 +45,7 @@ for ogpweb, t in enumerate((t1, t2, t3, t4), 1):
 
             w.writerow({
                 'ogpweb#': ogpweb,
-                'date': dt,
+                'date': datetime.strptime(dt, '%d/%b/%Y:%H:%M:%S').strftime('%Y-%m-%dT%H:%M:%S'),
                 'request': urllib.parse.unquote(request),
                 'code': code,
                 'bytes': bts,
@@ -52,5 +53,5 @@ for ogpweb, t in enumerate((t1, t2, t3, t4), 1):
                 'useragent': useragent,
                 'source': source,
                 'rt': rt,
-                'urt': urt,
+                'urt': '' if urt == '-' else urt,
             })
